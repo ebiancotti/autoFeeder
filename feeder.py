@@ -29,8 +29,8 @@ LOGFILE = "C:/Users/EmilianoB.ADELINA/petfeeder.log"
 # Variables for checking email
 GMAILHOSTNAME = 'imap.gmail.com' # Insert your mailserver here - Gmail uses 'imap.gmail.com'
 MAILBOX = 'Inbox' # Insert the name of your mailbox. Gmail uses 'Inbox'
-#GMAILUSER = # Insert your email username
-#GMAILPASSWD = # Insert your email password
+GMAILUSER = 'dispensermila@gmail.com'
+GMAILPASSWD = 'belemi18'
 NEWMAIL_OFFSET = 0
 lastEmailCheck = time.time()
 MAILCHECKDELAY = 30  # Don't check email too often since Gmail will complain
@@ -54,7 +54,7 @@ def checkmail():
     global lastFeed
     global feedInterval
     
-    if (time.time() > (lastEmailCheck + MAILCHECKDELAY)):  # Make sure that that atleast MAILCHECKDELAY time has passed
+    if (time.time() > (lastEmailCheck + MAILCHECKDELAY)):  # Make sure that that a tleast MAILCHECKDELAY time has passed
         lastEmailCheck = time.time()
         server = IMAPClient(GMAILHOSTNAME, use_uid=True, ssl=True)  # Create the server class from IMAPClient with HOSTNAME mail server
         server.login(GMAILUSER, GMAILPASSWD)
@@ -67,13 +67,17 @@ def checkmail():
         if whenMessages:
             for msg in whenMessages:
                 msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])
-                fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
-                msgBody = "The last feeding was done on " + time.strftime("%b %d at %I:%M %P", time.localtime(lastFeed))
+                fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]
+                print(fromAddress)
+                
+                #fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
+                
+                msgBody = "The last feeding was done on " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed))
 
                 if (time.time() - lastFeed) > feedInterval:
                     msgBody = msgBody + "\nReady to feed now!"
                 else:
-                    msgBody = msgBody + "\nThe next feeding can begin on " + time.strftime("%b %d at %I:%M %P", time.localtime(lastFeed + feedInterval))
+                    msgBody = msgBody + "\nThe next feeding can begin on " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed + feedInterval))
                                               
                 sendemail(fromAddress, "Thanks for your feeding query", msgBody)
                 server.add_flags(whenMessages, [SEEN])
@@ -111,7 +115,7 @@ def sendemail(to, subject, text, attach=None):
     if attach:
         part = MIMEBase('application', 'octet-stream')
         part.set_payload(open(attach, 'rb').read())
-        Encoders.encode_base64(part)
+        encoders.encode_base64(part)
         part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(attach))
         msg.attach(part)
     mailServer = smtplib.SMTP("smtp.gmail.com", 587)
@@ -154,13 +158,12 @@ def feednow():
     global motorTime
     global lastFeed
     global GMAILUSER
-
-    lcd.clear()    
+      
     if MOTORON:
         GPIO.output(MOTORCONTROLPIN, True)
         time.sleep(motorTime)
         GPIO.output(MOTORCONTROLPIN, False)
-        printlcd(0,1, "Done!")
+        print("Done!")
         sendemail(GMAILUSER, "Fed at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(lastFeed)), "Feeding done!")
         time.sleep(2)
     return time.time()
@@ -214,17 +217,16 @@ try:
     while True:
 
         #### If reset button pressed, then reset the counter
-        if buttonpressed(RESETBUTTONPIN):
-            lcd.clear()
-            printlcd(0,0, "Resetting...   ")
+        if buttonpressed(RESETBUTTONPIN):            
+            print("Resetting...")
             time.sleep(2)
             lastFeed = time.time() - feedInterval + 5
             saveLastFeed()
         
         #### Check if we are ready to feed
         if (time.time() - lastFeed) > feedInterval:
-            printlcd(0,0, time.strftime("%m/%d %I:%M:%S%P", time.localtime(time.time())))
-            printlcd(0,1, "Ready to feed   ")
+            print(time.strftime("%m/%d %I:%M:%S%P", time.localtime(time.time())))
+            print("Ready to feed")
 
             #### See if the button is pressed
             if buttonpressed(FEEDBUTTONPIN):
@@ -239,25 +241,24 @@ try:
         #### Since it is not time to feed yet, keep the countdown going
         else:
             timeToFeed = (lastFeed + feedInterval) - time.time()
-            print(0,0, time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime(time.time())))
-            print(0,1, 'Next:' + time.strftime("%Hh %Mm %Ss", time.gmtime(timeToFeed)))
+            print(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime(time.time())))
+            print('Next:' + time.strftime("%Hh %Mm %Ss", time.gmtime(timeToFeed)))
             checkmail()
-            if buttonpressed(FEEDBUTTONPIN):
-                lcd.clear()
-                print(0,0, "Not now, try at ")
-                print(0,1, time.strftime("%b/%d %H:%M", time.localtime(lastFeed + feedInterval)))
+            if buttonpressed(FEEDBUTTONPIN):                
+                print("Not now, try at ")
+                print(time.strftime("%b/%d %H:%M", time.localtime(lastFeed + feedInterval)))
                 time.sleep(2)
-        time.sleep(.6)
+        time.sleep(1)
 
 
 #### Cleaning up at the end
 except KeyboardInterrupt:
     logFile.close()
-    lcd.clear()
+    
     GPIO.cleanup()
 
 
 except SystemExit:
     logFile.close()
-    lcd.clear()
+    
     GPIO.cleanup()
