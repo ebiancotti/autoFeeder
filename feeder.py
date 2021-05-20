@@ -42,7 +42,7 @@ RESETBUTTONPIN = 13
 
 # Variables for feeding information
 readyToFeed = False # not used now but for future use
-feedInterval = 28800 # This translates to 8 hours in seconds
+feedInterval = 30 #21600 # This translates to 6 hours in seconds
 #FEEDFILE="/home/petfeeder/lastfeed"
 FEEDFILE = "C:/Users/EmilianoB.ADELINA/oo.txt"
 cupsToFeed = 1
@@ -90,13 +90,14 @@ def checkmail():
         if feedMessages:
             for msg in feedMessages:
                 msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])
-                fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
+                #fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
+                fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]
 
-                msgBody = "The last feeding was done at " + time.strftime("%b %d at %I:%M %P", time.localtime(lastFeed))
+                msgBody = "The last feeding was done at " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed))
                 if (time.time() - lastFeed) > feedInterval:
-                    msgBody = msgBody + "\nReady to be fed, will be feeding Lucky shortly"
+                    msgBody = msgBody + "\nReady to be fed, will be feeding Mila shortly"
                 else:
-                    msgBody = msgBody + "\nThe next feeding can begin at " + time.strftime("%b %d at %I:%M %P", time.localtime(lastFeed + feedInterval))
+                    msgBody = msgBody + "\nThe next feeding can begin at " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed + feedInterval))
                                    
                 sendemail(fromAddress, "Thanks for your feeding request", msgBody)
 
@@ -225,7 +226,7 @@ try:
         
         #### Check if we are ready to feed
         if (time.time() - lastFeed) > feedInterval:
-            print(time.strftime("%m/%d %I:%M:%S%P", time.localtime(time.time())))
+            print(time.strftime("%m/%d %I:%M:%S %p", time.localtime(time.time())))
             print("Ready to feed")
 
             #### See if the button is pressed
