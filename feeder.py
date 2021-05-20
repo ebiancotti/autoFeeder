@@ -12,6 +12,7 @@ from email import encoders
 import os
 import sys
 #import RPi.GPIO as GPIO
+#hola
 #from Adafruit_CharLCD import Adafruit_CharLCD
 import httplib2
 import json
