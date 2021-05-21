@@ -6,6 +6,8 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 import os
+import sys
+
 #import RPi.GPIO as GPIO
 
 DEBUG = False
@@ -35,7 +37,8 @@ feedInterval = 30 #21600 # This translates to 6 hours in seconds
 FEEDFILE = "C:/Users/EmilianoB.ADELINA/oo.txt"
 cupsToFeed = 1
 motorTime = cupsToFeed * 27 # It takes 27 seconds of motor turning (~1.75 rotations) to get 1 cup of feed
-  
+
+
 # Function to check email
 def checkmail():
     global lastEmailCheck
@@ -47,7 +50,11 @@ def checkmail():
         server = IMAPClient(GMAILHOSTNAME, use_uid=True, ssl=True)  # Create the server class from IMAPClient with HOSTNAME mail server
         server.login(GMAILUSER, GMAILPASSWD)
         server.select_folder(MAILBOX)
+
+
+        ##############    Mensajes WHEN    #####################
         
+
         # See if there are any messages with subject "When" that are unread
         whenMessages = server.search([u'UNSEEN', u'SUBJECT', u'When'])
 
@@ -70,6 +77,42 @@ def checkmail():
                 server.add_flags(whenMessages, [SEEN])
 
 
+        ##############    Mensajes SET    #####################        
+
+
+        # See if there are any messages with subject "SET" that are unread
+        setMessages = server.search([u'UNSEEN', u'SUBJECT', u'Set'])
+
+        # Respond to the set messages
+        if setMessages:
+            for msg in setMessages:
+                msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])
+                fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]
+                                   
+                setLastFeed()
+                
+                msgBody = "The last feeding date was set on " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed))
+                                     
+                sendemail(fromAddress, "\nThanks for setting time", msgBody)
+                server.add_flags(whenMessages, [SEEN])          
+
+
+        ##############    Mensajes Close    #####################
+
+
+        # See if there are any messages with subject "Close" that are unread
+        closeMessages = server.search([u'UNSEEN', u'SUBJECT', u'Close'])
+
+        # Respond to the close messages
+        if closeMessages:
+            for msg in closeMessages:
+                                                   
+                sys.exit()
+
+
+        ##############    Mensajes Feed    #####################    
+
+
         # See if there are any messages with subject "Feed" that are unread
         feedMessages = server.search([u'UNSEEN', u'SUBJECT', u'Feed'])
         
@@ -89,8 +132,8 @@ def checkmail():
                 sendemail(fromAddress, "Thanks for your feeding request", msgBody)
 
                 server.add_flags(feedMessages, [SEEN])
+            
             return True
-
     return False
 
 
@@ -165,6 +208,16 @@ def saveLastFeed():
         feedFile.write(str(lastFeed))
     feedFile.close()
 
+def setLastFeed():
+    global FEEDTIME
+    global lastFeed
+    global now
+
+    with open(FEEDFILE, 'w') as feedFile:
+        lastFeed = time.time()
+        feedFile.write(str(lastFeed))
+    feedFile.close()
+        
 
 # This is the main program, essentially runs in a continuous loop looking for button press or remote request
 try:
