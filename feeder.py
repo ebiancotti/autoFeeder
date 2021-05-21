@@ -7,15 +7,13 @@ from email.mime.text import MIMEText
 from email import encoders
 import os
 import sys
-
 #import RPi.GPIO as GPIO
 
-DEBUG = False
 MOTORON = True
 
 # Here is our logfile
 #LOGFILE = "/tmp/petfeeder.log"
-LOGFILE = "C:/Users/EmilianoB.ADELINA/petfeeder.log"
+#LOGFILE = "C:/Users/EmilianoB.ADELINA/petfeeder.log"
 
 # Variables for checking email
 GMAILHOSTNAME = 'imap.gmail.com'
@@ -62,9 +60,7 @@ def checkmail():
         if whenMessages:
             for msg in whenMessages:
                 msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])
-                fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]
-                                
-                #fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
+                fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]          
                 
                 msgBody = "The last feeding was done on " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed))
 
@@ -119,8 +115,7 @@ def checkmail():
         # Respond to the feed messages and then exit
         if feedMessages:
             for msg in feedMessages:
-                msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])
-                #fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
+                msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])                
                 fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]
 
                 msgBody = "The last feeding was done at " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed))
@@ -173,13 +168,8 @@ def buttonpressed(PIN):
 
 def remotefeedrequest():
     # At this time we are only checking for email
-    # Other mechanisms for input (e.g. web interface or iOS App) is a TO-DO
+    
     return checkmail()
-
-
-def printlcd(row, col):
-    # Set the row and column for the LCD and print the message
-    global logFile
     
 
 def feednow():
@@ -226,7 +216,7 @@ try:
     ####################################################
     
     # Initialize the logfile
-    logFile = open(LOGFILE, 'a')
+    #logFile = open(LOGFILE, 'a')
 
    
     
@@ -276,6 +266,7 @@ try:
                 lastFeed = feednow()
                 saveLastFeed()
             
+            ###SACAR FUERA ESTE IF SI QUIERO QUE EJECUTE FEED INDEPENDIENTEMENTE DE LA HORA
             #### Check if remote feed request is available
             elif remotefeedrequest():
                 lastFeed = feednow()
@@ -296,12 +287,12 @@ try:
 
 #### Cleaning up at the end
 except KeyboardInterrupt:
-    logFile.close()
+    #logFile.close()
     
     GPIO.cleanup()
 
 
 except SystemExit:
-    logFile.close()
+    #logFile.close()
     
     GPIO.cleanup()
