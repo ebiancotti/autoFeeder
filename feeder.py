@@ -34,7 +34,9 @@ feedInterval = 30 #21600 # This translates to 6 hours in seconds
 #FEEDFILE="/home/petfeeder/lastfeed"
 FEEDFILE = "C:/Users/EmilianoB.ADELINA/oo.txt"
 cupsToFeed = 1
-motorTime = cupsToFeed * 27 # It takes 27 seconds of motor turning (~1.75 rotations) to get 1 cup of feed
+motorTime = 3 #cupsToFeed * 27 # It takes 27 seconds of motor turning (~1.75 rotations) to get 1 cup of feed
+anguloDeApertura = 45
+duty = 2 + (anguloDeApertura/18)
 
 
 # Function to check email
@@ -182,10 +184,37 @@ def feednow():
       
     if MOTORON:
 
-        #aca va la lógica nueva del motor
-        GPIO.output(MOTORCONTROLPIN, True)
+        # Set GPIO numbering mode
+        GPIO.setmode(GPIO.BOARD)
+
+        # Set pin as an output, and set servo1 as pin PWM
+        GPIO.setup(MOTORCONTROLPIN,GPIO.OUT)
+        servo1 = GPIO.PWM(MOTORCONTROLPIN,50) # Note MOTORCONTROLPIN is pin, 50 = 50Hz pulse
+
+        #start PWM running, but with value of 0 (pulse off)
+        servo1.start(0)
+
+        # Turn to 'anguloDeApertura' degrees
+
+        print("Moviendo a " + anguloDeApertura + "grados")
+        servo1.ChangeDutyCycle(duty)
         time.sleep(motorTime)
-        GPIO.output(MOTORCONTROLPIN, False)
+
+        #turn back to 0 degrees
+        print ("Turning back to 0 degrees")
+        servo1.ChangeDutyCycle(2)
+        time.sleep(0.5)
+        servo1.ChangeDutyCycle(0)       
+        
+        #logica vieja
+        #GPIO.output(MOTORCONTROLPIN, True)
+        #time.sleep(motorTime)
+        #GPIO.output(MOTORCONTROLPIN, False)
+
+        #Clean things up at the end
+        servo1.stop()
+        GPIO.cleanup()
+
         print("Done!")
         sendemail(GMAILUSER, "Fed at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(lastFeed)), "Feeding done!")
         time.sleep(2)
