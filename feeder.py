@@ -1,23 +1,12 @@
 from imapclient import IMAPClient, SEEN
-#import imaplib
 import time
 import smtplib
 from email.mime.multipart import MIMEMultipart 
-#from email.MIMEMultipart import MIMEMultipart
 from email.mime.base import MIMEBase
-#from email.MIMEBase import MIMEBase
 from email.mime.text import MIMEText
-#from email.MIMEText import MIMEText
 from email import encoders
 import os
-import sys
 #import RPi.GPIO as GPIO
-#holass
-#from Adafruit_CharLCD import Adafruit_CharLCD
-import httplib2
-import json
-import html2text
-
 
 DEBUG = False
 MOTORON = True
@@ -27,13 +16,13 @@ MOTORON = True
 LOGFILE = "C:/Users/EmilianoB.ADELINA/petfeeder.log"
 
 # Variables for checking email
-GMAILHOSTNAME = 'imap.gmail.com' # Insert your mailserver here - Gmail uses 'imap.gmail.com'
-MAILBOX = 'Inbox' # Insert the name of your mailbox. Gmail uses 'Inbox'
+GMAILHOSTNAME = 'imap.gmail.com'
+MAILBOX = 'Inbox'
 GMAILUSER = 'dispensermila@gmail.com'
 GMAILPASSWD = 'belemi18'
 NEWMAIL_OFFSET = 0
 lastEmailCheck = time.time()
-MAILCHECKDELAY = 30  # Don't check email too often since Gmail will complain
+MAILCHECKDELAY = 30
 
 # GPIO pins for feeder control
 MOTORCONTROLPIN = 19
@@ -41,7 +30,6 @@ FEEDBUTTONPIN = 6
 RESETBUTTONPIN = 13
 
 # Variables for feeding information
-readyToFeed = False # not used now but for future use
 feedInterval = 30 #21600 # This translates to 6 hours in seconds
 #FEEDFILE="/home/petfeeder/lastfeed"
 FEEDFILE = "C:/Users/EmilianoB.ADELINA/oo.txt"
@@ -68,8 +56,7 @@ def checkmail():
             for msg in whenMessages:
                 msginfo = server.fetch([msg], ['BODY[HEADER.FIELDS (FROM)]'])
                 fromAddress = str(msginfo).replace("<class 'dict'>", "").split('<')[1].split('>')[0]
-                print(fromAddress)
-                
+                                
                 #fromAddress = str(msginfo[msg].get('BODY[HEADER.FIELDS (FROM)]')).split('<')[1].split('>')[0]
                 
                 msgBody = "The last feeding was done on " + time.strftime("%b %d at %I:%M %p", time.localtime(lastFeed))
@@ -161,6 +148,8 @@ def feednow():
     global GMAILUSER
       
     if MOTORON:
+
+        #aca va la lógica nueva del motor
         GPIO.output(MOTORCONTROLPIN, True)
         time.sleep(motorTime)
         GPIO.output(MOTORCONTROLPIN, False)
